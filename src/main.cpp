@@ -3,6 +3,13 @@
 #include "Student.hpp"
 #include <vector>
 
+class check{
+    public:
+    explicit check(Student* student){
+        printf("Student object created\n");
+    }
+};
+
 int main(int, char**){
     printf("Hello, from stl_debug!\n");
     std::vector<Human*> vec;
@@ -13,5 +20,6 @@ int main(int, char**){
     for (const auto& h : vec) {
         h->print();
     }
-    static_cast<Student*>(vec.back())->print();
+    auto student1 = static_cast<Student*>(vec.back());
+    check check1 = check(student1);
 }
