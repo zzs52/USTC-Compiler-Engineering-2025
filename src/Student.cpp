@@ -1,10 +1,12 @@
 #include "Student.hpp"
+#include "cstring"
 
 Student::~Student() {
     printf("Student destructor called\n");
 }
 
-void Student::print() const {
-    Human::print();
-    printf("I'm from %s\n", school_.c_str());
+char* Student::print() const {
+    char *res = Human::print();
+    sprintf(res + strlen(res), "I'm from %s\n", school_.c_str());
+    return res;
 }

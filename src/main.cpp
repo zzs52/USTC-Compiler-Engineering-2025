@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "Human.hpp"
 #include "Student.hpp"
+#include "logging.hpp"
 #include <vector>
 
 class check{
@@ -18,8 +19,11 @@ int main(int, char**){
     vec.push_back(&human);
     vec.push_back(&student);
     for (const auto& h : vec) {
-        h->print();
+        std::cout << h->print();
     }
     auto student1 = static_cast<Student*>(vec.back());
+    // check check1 = check(student);
     check check1 = check(student1);
+    LOG(DEBUG) << student1->print();
+    LOG(WARNING) << human.print();
 }
