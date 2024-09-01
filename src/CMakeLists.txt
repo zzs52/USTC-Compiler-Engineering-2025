@@ -1,3 +1,3 @@
 add_executable(
-    stl_test main.cpp Human.cpp Student.cpp logging.cpp
+    lab0_debug main.cpp Human.cpp Student.cpp logging.cpp
 )

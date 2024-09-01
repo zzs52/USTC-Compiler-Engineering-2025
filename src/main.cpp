@@ -1,3 +1,5 @@
+#include <iostream>
+#include <string>
 #include <stdio.h>
 #include "Human.hpp"
 #include "Student.hpp"
@@ -11,7 +13,11 @@ class check{
     }
 };
 
-int main(int, char**){
+int main(int argc, char** argv){
+    if(argc == 1 || std::string(argv[1]) != "-t"){
+        std::cerr << "error: invalid argument\n";
+        exit(-1);
+    }
     printf("Hello, from stl_debug!\n");
     std::vector<Human*> vec;
     Human human(25, "John Doe");
@@ -21,9 +27,17 @@ int main(int, char**){
     for (const auto& h : vec) {
         std::cout << h->print();
     }
+    // auto student1 = new Student();   //TODO: Error 1 : why?
     auto student1 = static_cast<Student*>(vec.back());
-    // check check1 = check(student);
+    // check check1 = check(student);   //TODO: Error 2 : why?
     check check1 = check(student1);
-    LOG(DEBUG) << student1->print();
-    LOG(WARNING) << human.print();
+    // LOG(DEBUG) << student1->print();
+    // LOG(WARNING) << human.print();
+
+    // std::list<int> list;
+    // list.push_back(1);
+    // for(auto i: list){
+    //     list.remove(i);
+    // }
+    return 0;
 }
