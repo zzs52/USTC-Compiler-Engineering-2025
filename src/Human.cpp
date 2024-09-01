@@ -1,11 +1,15 @@
 #include "Human.hpp"
+#include <string>
+#include <sstream>
 
 Human::~Human() {
     printf("Human destructor called\n");
 }
 
-char* Human::print() const {
-    char* res = new char[100];
-    sprintf(res, "My name is %s and I am %d years old\n", name_.c_str(), age_);
+std::string Human::print() const {
+    std::string res;
+    std::stringstream ss;
+    ss << "My name is " << name_ << " and I am " << age_ << " years old\n";
+    ss >> res;
     return res;
 }

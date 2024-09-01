@@ -9,6 +9,6 @@ private:
 public:
     explicit Human(int age, const std::string name = "") : name_(name), age_(age) {};
     virtual ~Human();
-    virtual char* print() const;
+    virtual std::string print() const;
 
 };

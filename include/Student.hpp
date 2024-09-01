@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Human.hpp"
+#include <string>
 
 class Student : public Human
 {
@@ -11,5 +12,5 @@ public:
     Student() = delete; 
     explicit Student(int age, const std::string name = "", const std::string school = "") : Human(age, name), school_(school) {};
     virtual ~Student() override;
-    virtual char* print() const override;
+    virtual std::string print() const override;
 };
