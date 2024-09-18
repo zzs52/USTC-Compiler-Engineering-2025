@@ -1,1 +1,2 @@
 - Lab0 已经发布 `git checkout lab0`
+- Lab1 已经发布 `git checkout lab1`
