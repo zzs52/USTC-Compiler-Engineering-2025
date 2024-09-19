@@ -65,8 +65,8 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %token <node> WHILE
 %token <node> IDENTIFIER
 %token <node> INTEGER
-%token <node> FLOAT
-%token <node> FLOATPOINT	// 这个是 float 类型的 token
+%token <node> FLOAT             // 这个token 对应float 关键字
+%token <node> FLOATPOINT        // 这个token 对应 浮点数值, 如果分不清的同学可以参考type-specifier的文法和对应产生式规则
 //%token <node> EOL
 //%token <node> BLANK
 //%token <node> COMMENT
@@ -122,7 +122,7 @@ local-declarations 	: 	local-declarations var-declaration {$$ = node( "local-dec
 
 statement-list 	: 	statement-list statement {$$ = node( "statement-list", 2, $1, $2);}
 | 	{$$ = node( "statement-list",0);}
-
+                    ;
 // TODO: phase1. 补充其他的文法产生式逻辑
 
 %%
