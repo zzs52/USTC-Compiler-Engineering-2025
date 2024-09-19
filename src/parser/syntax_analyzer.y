@@ -48,7 +48,7 @@ syntax_tree_node *node(const char *node_name, int children_num, ...);
 %token <node> GTE
 %token <node> EQ
 %token <node> NEQ
-%token <node> ASSIN
+%token <node> ASSIGN
 %token <node> SEMICOLON
 %token <node> COMMA
 %token <node> LPARENTHESE
