@@ -3,10 +3,10 @@
 #include <cstring>
 #include <iostream>
 #include <stack>
-#define _AST_NODE_ERROR_                                                                                               \
-    std::cerr << "Abort due to node cast error."                                                                       \
-                 "Contact with TAs to solve your problem."                                                             \
-              << std::endl;                                                                                            \
+#define _AST_NODE_ERROR_                                                       \
+    std::cerr << "Abort due to node cast error."                               \
+                 "Contact with TAs to solve your problem."                     \
+              << std::endl;                                                    \
     std::abort();
 #define _STR_EQ(a, b) (strcmp((a), (b)) == 0)
 
@@ -25,14 +25,17 @@ CalcAST::CalcAST(syntax_tree *s) {
 CalcASTNode *CalcAST::transform_node_iter(syntax_tree_node *n) {
     if (_STR_EQ(n->name, "input")) {
         auto node = new CalcASTInput();
-        auto expr_node = static_cast<CalcASTExpression *>(transform_node_iter(n->children[0]));
+        auto expr_node = static_cast<CalcASTExpression *>(
+            transform_node_iter(n->children[0]));
         node->expression = std::shared_ptr<CalcASTExpression>(expr_node);
         return node;
     } else if (_STR_EQ(n->name, "expression")) {
         auto node = new CalcASTExpression();
         if (n->children_num == 3) {
-            auto add_expr_node = static_cast<CalcASTExpression *>(transform_node_iter(n->children[0]));
-            node->expression = std::shared_ptr<CalcASTExpression>(add_expr_node);
+            auto add_expr_node = static_cast<CalcASTExpression *>(
+                transform_node_iter(n->children[0]));
+            node->expression =
+                std::shared_ptr<CalcASTExpression>(add_expr_node);
 
             auto op_name = n->children[1]->children[0]->name;
             if (_STR_EQ(op_name, "+"))
@@ -40,17 +43,20 @@ CalcASTNode *CalcAST::transform_node_iter(syntax_tree_node *n) {
             else if (_STR_EQ(op_name, "-"))
                 node->op = OP_MINUS;
 
-            auto term_node = static_cast<CalcASTTerm *>(transform_node_iter(n->children[2]));
+            auto term_node =
+                static_cast<CalcASTTerm *>(transform_node_iter(n->children[2]));
             node->term = std::shared_ptr<CalcASTTerm>(term_node);
         } else {
-            auto term_node = static_cast<CalcASTTerm *>(transform_node_iter(n->children[0]));
+            auto term_node =
+                static_cast<CalcASTTerm *>(transform_node_iter(n->children[0]));
             node->term = std::shared_ptr<CalcASTTerm>(term_node);
         }
         return node;
     } else if (_STR_EQ(n->name, "term")) {
         auto node = new CalcASTTerm();
         if (n->children_num == 3) {
-            auto term_node = static_cast<CalcASTTerm *>(transform_node_iter(n->children[0]));
+            auto term_node =
+                static_cast<CalcASTTerm *>(transform_node_iter(n->children[0]));
             node->term = std::shared_ptr<CalcASTTerm>(term_node);
 
             auto op_name = n->children[1]->children[0]->name;
@@ -59,10 +65,12 @@ CalcASTNode *CalcAST::transform_node_iter(syntax_tree_node *n) {
             else if (_STR_EQ(op_name, "/"))
                 node->op = OP_DIV;
 
-            auto factor_node = static_cast<CalcASTFactor *>(transform_node_iter(n->children[2]));
+            auto factor_node = static_cast<CalcASTFactor *>(
+                transform_node_iter(n->children[2]));
             node->factor = std::shared_ptr<CalcASTFactor>(factor_node);
         } else {
-            auto factor_node = static_cast<CalcASTFactor *>(transform_node_iter(n->children[0]));
+            auto factor_node = static_cast<CalcASTFactor *>(
+                transform_node_iter(n->children[0]));
             node->factor = std::shared_ptr<CalcASTFactor>(factor_node);
         }
         return node;
@@ -82,9 +90,13 @@ CalcASTNode *CalcAST::transform_node_iter(syntax_tree_node *n) {
 
 void CalcASTNum::accept(CalcASTVisitor &visitor) { visitor.visit(*this); }
 void CalcASTTerm::accept(CalcASTVisitor &visitor) { visitor.visit(*this); }
-void CalcASTExpression::accept(CalcASTVisitor &visitor) { visitor.visit(*this); }
+void CalcASTExpression::accept(CalcASTVisitor &visitor) {
+    visitor.visit(*this);
+}
 
-void CalcASTInput::accept(CalcASTVisitor &visitor) { expression->accept(visitor); }
+void CalcASTInput::accept(CalcASTVisitor &visitor) {
+    expression->accept(visitor);
+}
 
 void CalcASTFactor::accept(CalcASTVisitor &visitor) {
     auto expr = dynamic_cast<CalcASTExpression *>(this);

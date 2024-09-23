@@ -6,18 +6,15 @@
 
 #include <cassert>
 
-BasicBlock::BasicBlock(Module *m, const std::string &name = "", Function *parent = nullptr)
+BasicBlock::BasicBlock(Module *m, const std::string &name = "",
+                       Function *parent = nullptr)
     : Value(m->get_label_type(), name), parent_(parent) {
     assert(parent && "currently parent should not be nullptr");
     parent_->add_basic_block(this);
 }
 
-Module *BasicBlock::get_module() {
-    return get_parent()->get_parent();
-}
-void BasicBlock::erase_from_parent() {
-    this->get_parent()->remove(this);
-}
+Module *BasicBlock::get_module() { return get_parent()->get_parent(); }
+void BasicBlock::erase_from_parent() { this->get_parent()->remove(this); }
 
 bool BasicBlock::is_terminated() const {
     if (instr_list_.empty()) {
