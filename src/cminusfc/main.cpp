@@ -37,25 +37,27 @@ struct Config {
 int main(int argc, char **argv) {
     Config config(argc, argv);
 
-    std::unique_ptr<Module> m;
-    {
-        auto syntax_tree = parse(config.input_file.c_str());
-        auto ast = AST(syntax_tree);
-        if (config.emitast) {
-            ASTPrinter printer;
-            ast.run_visitor(printer);
-        }
+    auto syntax_tree = parse(config.input_file.c_str());
+    auto ast = AST(syntax_tree);
+
+    if (config.emitast) { // if emit ast (lab1), print ast and return
+        ASTPrinter printer;
+        ast.run_visitor(printer);
+    } else {
+        std::unique_ptr<Module> m;
         CminusfBuilder builder;
         ast.run_visitor(builder);
         m = builder.getModule();
-    }
 
-    std::ofstream output_stream(config.output_file);
-    if (config.emitllvm) {
-        auto abs_path = std::filesystem::canonical(config.input_file);
-        output_stream << "; ModuleID = 'cminus'\n";
-        output_stream << "source_filename = " << abs_path << "\n\n";
-        output_stream << m->print();
+        std::ofstream output_stream(config.output_file);
+        if (config.emitllvm) {
+            auto abs_path = std::filesystem::canonical(config.input_file);
+            output_stream << "; ModuleID = 'cminus'\n";
+            output_stream << "source_filename = " << abs_path << "\n\n";
+            output_stream << m->print();
+        }
+
+        // TODO: lab3 lab4 (IR optimization or codegen)
     }
 
     return 0;
