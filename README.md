@@ -16,5 +16,6 @@ eval_lab2.sh:
 cmake -B build && cmake --install build
 # 否则 执行以下指令
 cmake -B build && cmake --build build
+```
 
 无论哪种命令，你都可以在 build/ 下找到 cminusfc 等可执行文件
