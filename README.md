@@ -9,3 +9,12 @@
 
 eval_lab2.sh: 
     没有参数，直接运行即可，结果会生成在 eval_result 下
+
+如何编译：
+``` bash
+# 如果你想安装到usr/local/bin
+cmake -B build && cmake --install build
+# 否则 执行以下指令
+cmake -B build && cmake --build build
+
+无论哪种命令，你都可以在 build/ 下找到 cminusfc 等可执行文件
