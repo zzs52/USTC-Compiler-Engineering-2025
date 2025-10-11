@@ -103,7 +103,10 @@ Value* CminusfBuilder::visit(ASTFunDeclaration &node) {
         args.push_back(&arg);
     }
     for (unsigned int i = 0; i < node.params.size(); ++i) {
-        // TODO: You need to deal with params and store them in the scope.
+        auto* param_i = node.params[i]->accept(*this);
+        args[i]->set_name(node.params[i]->id);
+        builder->create_store(args[i], param_i);
+        scope.push(args[i]->get_name(), param_i);
     }
     node.compound_stmt->accept(*this);
     if (builder->get_insert_block()->get_terminator() == nullptr) 
@@ -214,8 +217,71 @@ Value* CminusfBuilder::visit(ASTReturnStmt &node) {
 }
 
 Value* CminusfBuilder::visit(ASTVar &node) {
-    // TODO: This function is empty now.
-    // Add some code here.
+    Value* baseAddr = this->scope.find(node.id);
+    Type* alloctype = nullptr;
+    
+    if(baseAddr->is<AllocaInst>()) {
+        alloctype = baseAddr->as<AllocaInst>()->get_alloca_type();
+    } else {
+        alloctype = baseAddr->as<GlobalVariable>()->get_type()->get_pointer_element_type();
+    }
+
+    if(node.expression) {
+        bool original_require_lvalue = context.require_lvalue;
+        context.require_lvalue = false;
+        auto idx = node.expression->accept(*this);
+        context.require_lvalue = original_require_lvalue;
+
+        if (idx->get_type()->is_float_type()) {
+            idx = builder->create_fptosi(idx, INT32_T);
+        } else if(idx->get_type()->is_int1_type()){
+            idx = builder->create_zext(idx, INT32_T);
+        }
+        auto right_bb = BasicBlock::create(module.get(), "", context.func);
+        auto wrong_bb = BasicBlock::create(module.get(), "", context.func);
+        
+        auto cond_neg = builder->create_icmp_ge(idx, CONST_INT(0));
+        builder->create_cond_br(cond_neg,right_bb, wrong_bb);
+
+        auto wrong = scope.find("neg_idx_except");
+        builder->set_insert_point(wrong_bb);
+        builder->create_call(wrong, {});
+        builder->create_br(right_bb);
+        builder->set_insert_point(right_bb);
+        
+        if(context.require_lvalue) {
+            if(alloctype->is_pointer_type()) {
+                baseAddr = builder->create_load(baseAddr);
+                baseAddr = builder->create_gep(baseAddr,{idx});
+            } else if(alloctype->is_array_type()){ 
+                baseAddr = builder->create_gep(baseAddr,{CONST_INT(0),idx});
+            }
+            context.require_lvalue = false;
+            return baseAddr;
+        } else {
+            if(alloctype->is_pointer_type()){
+                baseAddr = builder->create_load(baseAddr);
+                baseAddr = builder->create_gep(baseAddr,{idx});
+            } else if(alloctype->is_array_type()){ 
+                baseAddr = builder->create_gep(baseAddr,{CONST_INT(0),idx});
+            }
+            baseAddr = builder->create_load(baseAddr);
+            return baseAddr;
+        }
+    } else {
+        if (context.require_lvalue) {
+            context.require_lvalue = false;
+            return baseAddr;
+            // return builder->create_gep(baseAddr, {CONST_INT(0)});
+        } else {
+            if(alloctype->is_array_type()){
+                return builder->create_gep(baseAddr, {CONST_INT(0),CONST_INT(0)});
+            } else {
+                return builder->create_load(baseAddr);
+            }
+            
+        }
+    }
     return nullptr;
 }
 
