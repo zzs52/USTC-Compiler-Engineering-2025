@@ -501,11 +501,19 @@ Value* CminusfBuilder::visit(ASTTerm &node) {
 Value* CminusfBuilder::visit(ASTCall &node) {
     auto *func = dynamic_cast<Function *>(scope.find(node.id));
     std::vector<Value *> args;
-    auto param_type = func->get_function_type()->param_begin();
+    auto param_types = func->get_function_type()->param_begin();
     for (auto &arg : node.args) {
         auto *arg_val = arg->accept(*this);
-        if (!arg_val->get_type()->is_pointer_type() &&
-            *param_type != arg_val->get_type()) {
+        if (arg_val->get_type()->is_pointer_type() &&
+            !(*param_types)->is_pointer_type()) {
+            // 解引用数组参数
+            arg_val = builder->create_load(arg_val);
+        } else if (!arg_val->get_type()->is_pointer_type() &&
+                   (*param_types)->is_pointer_type()) {
+            // 获取数组地址
+            // 不需要特殊处理，因为数组变量已经是地址
+        } else if (!arg_val->get_type()->is_pointer_type() &&
+                   *param_types != arg_val->get_type()) {
             if (arg_val->get_type()->is_integer_type()) {
                 arg_val = builder->create_sitofp(arg_val, FLOAT_T);
             } else {
@@ -513,7 +521,7 @@ Value* CminusfBuilder::visit(ASTCall &node) {
             }
         }
         args.push_back(arg_val);
-        param_type++;
+        param_types++;
     }
 
     return builder->create_call(static_cast<Function *>(func), args);
