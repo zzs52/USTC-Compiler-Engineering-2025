@@ -173,20 +173,28 @@ Value *CminusfBuilder::visit(ASTParam &node) {
     }
 }
 
-Value* CminusfBuilder::visit(ASTCompoundStmt &node) {
-    // TODO: This function is not complete.
-    // You may need to add some code here
-    // to deal with complex statements. 
-    
+Value *CminusfBuilder::visit(ASTCompoundStmt &node) {
+    bool need_enter = true;
+    if (context.pre_enter_scope) {
+        // 函数体的第一个 compound-stmt：作用域已在 FunDecl 中 enter 过
+        context.pre_enter_scope = false;
+        need_enter = false;
+    }
+    if (need_enter)
+        scope.enter();
+
     for (auto &decl : node.local_declarations) {
         decl->accept(*this);
     }
 
     for (auto &stmt : node.statement_list) {
         stmt->accept(*this);
-        if (builder->get_insert_block()->get_terminator() == nullptr)
+        if (builder->get_insert_block()->is_terminated())
             break;
     }
+
+    if (need_enter)
+        scope.exit();
     return nullptr;
 }
 
