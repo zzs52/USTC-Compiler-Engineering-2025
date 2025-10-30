@@ -283,9 +283,11 @@ Value* CminusfBuilder::visit(ASTReturnStmt &node) {
             context.func->get_function_type()->get_return_type();
         auto *ret_val = node.expression->accept(*this);
         if (fun_ret_type != ret_val->get_type()) {
-            if (fun_ret_type->is_integer_type()) {
+            if (fun_ret_type->is_integer_type() &&
+                ret_val->get_type()->is_float_type()) {
                 ret_val = builder->create_fptosi(ret_val, INT32_T);
-            } else {
+            } else if (fun_ret_type->is_float_type() &&
+                       ret_val->get_type()->is_integer_type()) {
                 ret_val = builder->create_sitofp(ret_val, FLOAT_T);
             }
         }
