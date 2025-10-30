@@ -219,23 +219,22 @@ Value* CminusfBuilder::visit(ASTSelectionStmt &node) {
 
     if (node.else_statement == nullptr) {
         builder->create_cond_br(cond_val, trueBB, contBB);
+        builder->set_insert_point(trueBB);
+        node.if_statement->accept(*this);
+        if (!builder->get_insert_block()->is_terminated()) {
+            builder->create_br(contBB);
+        }
     } else {
         falseBB = BasicBlock::create(module.get(), "", context.func);
         builder->create_cond_br(cond_val, trueBB, falseBB);
-    }
-    builder->set_insert_point(trueBB);
-    node.if_statement->accept(*this);
-
-    if (not builder->get_insert_block()->is_terminated()) {
-        builder->create_br(contBB);
-    }
-
-    if (node.else_statement == nullptr) {
-        // falseBB->erase_from_parent(); // did not clean up memory
-    } else {
+        builder->set_insert_point(trueBB);
+        node.if_statement->accept(*this);
+        if (!builder->get_insert_block()->is_terminated()) {
+            builder->create_br(contBB);
+        }
         builder->set_insert_point(falseBB);
         node.else_statement->accept(*this);
-        if (not builder->get_insert_block()->is_terminated()) {
+        if (!builder->get_insert_block()->is_terminated()) {
             builder->create_br(contBB);
         }
     }
