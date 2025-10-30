@@ -299,16 +299,18 @@ Value* CminusfBuilder::visit(ASTReturnStmt &node) {
 }
 
 Value* CminusfBuilder::visit(ASTVar &node) {
-    Value* baseAddr = this->scope.find(node.id);
-    Type* alloctype = nullptr;
-    
-    if(baseAddr->is<AllocaInst>()) {
+    Value *baseAddr = this->scope.find(node.id);
+    Type *alloctype = nullptr;
+
+    if (baseAddr->is<AllocaInst>()) {
         alloctype = baseAddr->as<AllocaInst>()->get_alloca_type();
     } else {
-        alloctype = baseAddr->as<GlobalVariable>()->get_type()->get_pointer_element_type();
+        alloctype = baseAddr->as<GlobalVariable>()
+                        ->get_type()
+                        ->get_pointer_element_type();
     }
 
-    if(node.expression) {
+    if (node.expression) {
         bool original_require_lvalue = context.require_lvalue;
         context.require_lvalue = false;
         auto idx = node.expression->accept(*this);
@@ -316,36 +318,36 @@ Value* CminusfBuilder::visit(ASTVar &node) {
 
         if (idx->get_type()->is_float_type()) {
             idx = builder->create_fptosi(idx, INT32_T);
-        } else if(idx->get_type()->is_int1_type()){
+        } else if (idx->get_type()->is_int1_type()) {
             idx = builder->create_zext(idx, INT32_T);
         }
         auto right_bb = BasicBlock::create(module.get(), "", context.func);
         auto wrong_bb = BasicBlock::create(module.get(), "", context.func);
-        
+
         auto cond_neg = builder->create_icmp_ge(idx, CONST_INT(0));
-        builder->create_cond_br(cond_neg,right_bb, wrong_bb);
+        builder->create_cond_br(cond_neg, right_bb, wrong_bb);
 
         auto wrong = scope.find("neg_idx_except");
         builder->set_insert_point(wrong_bb);
         builder->create_call(wrong, {});
         builder->create_br(right_bb);
         builder->set_insert_point(right_bb);
-        
-        if(context.require_lvalue) {
-            if(alloctype->is_pointer_type()) {
+
+        if (context.require_lvalue) {
+            if (alloctype->is_pointer_type()) {
                 baseAddr = builder->create_load(baseAddr);
-                baseAddr = builder->create_gep(baseAddr,{idx});
-            } else if(alloctype->is_array_type()){ 
-                baseAddr = builder->create_gep(baseAddr,{CONST_INT(0),idx});
+                baseAddr = builder->create_gep(baseAddr, {idx});
+            } else if (alloctype->is_array_type()) {
+                baseAddr = builder->create_gep(baseAddr, {CONST_INT(0), idx});
             }
             context.require_lvalue = false;
             return baseAddr;
         } else {
-            if(alloctype->is_pointer_type()){
+            if (alloctype->is_pointer_type()) {
                 baseAddr = builder->create_load(baseAddr);
-                baseAddr = builder->create_gep(baseAddr,{idx});
-            } else if(alloctype->is_array_type()){ 
-                baseAddr = builder->create_gep(baseAddr,{CONST_INT(0),idx});
+                baseAddr = builder->create_gep(baseAddr, {idx});
+            } else if (alloctype->is_array_type()) {
+                baseAddr = builder->create_gep(baseAddr, {CONST_INT(0), idx});
             }
             baseAddr = builder->create_load(baseAddr);
             return baseAddr;
@@ -356,12 +358,12 @@ Value* CminusfBuilder::visit(ASTVar &node) {
             return baseAddr;
             // return builder->create_gep(baseAddr, {CONST_INT(0)});
         } else {
-            if(alloctype->is_array_type()){
-                return builder->create_gep(baseAddr, {CONST_INT(0),CONST_INT(0)});
+            if (alloctype->is_array_type()) {
+                return builder->create_gep(baseAddr,
+                                           {CONST_INT(0), CONST_INT(0)});
             } else {
                 return builder->create_load(baseAddr);
             }
-            
         }
     }
     return nullptr;
