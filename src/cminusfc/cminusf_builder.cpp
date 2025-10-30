@@ -138,21 +138,25 @@ Value* CminusfBuilder::visit(ASTFunDeclaration &node) {
         args.push_back(&arg);
     }
     for (unsigned int i = 0; i < node.params.size(); ++i) {
-        auto* param_i = node.params[i]->accept(*this);
+        auto *param_i = node.params[i]->accept(*this);
         args[i]->set_name(node.params[i]->id);
         builder->create_store(args[i], param_i);
         scope.push(args[i]->get_name(), param_i);
     }
     node.compound_stmt->accept(*this);
-    if (builder->get_insert_block()->get_terminator() == nullptr) 
-    {
-        if (context.func->get_return_type()->is_void_type())
+
+    // 确保函数有返回语句
+    if (builder->get_insert_block() &&
+        !builder->get_insert_block()->is_terminated()) {
+        if (context.func->get_return_type()->is_void_type()) {
             builder->create_void_ret();
-        else if (context.func->get_return_type()->is_float_type())
+        } else if (context.func->get_return_type()->is_float_type()) {
             builder->create_ret(CONST_FP(0.));
-        else
+        } else {
             builder->create_ret(CONST_INT(0));
+        }
     }
+
     scope.exit();
     return nullptr;
 }
