@@ -386,9 +386,59 @@ Value* CminusfBuilder::visit(ASTAssignExpression &node) {
 }
 
 Value* CminusfBuilder::visit(ASTSimpleExpression &node) {
-    // TODO: This function is empty now.
-    // Add some code here.
-    return nullptr;
+    if (node.additive_expression_r == nullptr)
+        return node.additive_expression_l->accept(*this);
+
+    auto *l_val = node.additive_expression_l->accept(*this);
+    auto *r_val = node.additive_expression_r->accept(*this);
+    bool is_int = promote(&*builder, &l_val, &r_val);
+
+    Value *cmp_i1 = nullptr;
+    if (is_int) {
+        switch (node.op) {
+        case OP_LE:
+            cmp_i1 = builder->create_icmp_le(l_val, r_val);
+            break;
+        case OP_LT:
+            cmp_i1 = builder->create_icmp_lt(l_val, r_val);
+            break;
+        case OP_GT:
+            cmp_i1 = builder->create_icmp_gt(l_val, r_val);
+            break;
+        case OP_GE:
+            cmp_i1 = builder->create_icmp_ge(l_val, r_val);
+            break;
+        case OP_EQ:
+            cmp_i1 = builder->create_icmp_eq(l_val, r_val);
+            break;
+        case OP_NEQ:
+            cmp_i1 = builder->create_icmp_ne(l_val, r_val);
+            break;
+        }
+    } else {
+        switch (node.op) {
+        case OP_LE:
+            cmp_i1 = builder->create_fcmp_le(l_val, r_val);
+            break;
+        case OP_LT:
+            cmp_i1 = builder->create_fcmp_lt(l_val, r_val);
+            break;
+        case OP_GT:
+            cmp_i1 = builder->create_fcmp_gt(l_val, r_val);
+            break;
+        case OP_GE:
+            cmp_i1 = builder->create_fcmp_ge(l_val, r_val);
+            break;
+        case OP_EQ:
+            cmp_i1 = builder->create_fcmp_eq(l_val, r_val);
+            break;
+        case OP_NEQ:
+            cmp_i1 = builder->create_fcmp_ne(l_val, r_val);
+            break;
+        }
+    }
+
+    return builder->create_zext(cmp_i1, INT32_T);
 }
 
 Value* CminusfBuilder::visit(ASTAdditiveExpression &node) {
