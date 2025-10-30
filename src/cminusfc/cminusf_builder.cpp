@@ -161,8 +161,16 @@ Value* CminusfBuilder::visit(ASTFunDeclaration &node) {
     return nullptr;
 }
 
-Value* CminusfBuilder::visit(ASTParam &node) {
-    return nullptr;
+Value *CminusfBuilder::visit(ASTParam &node) {
+    if (node.isarray) {
+        // 数组参数：存放成指针
+        Type *ptr_ty = (node.type == TYPE_INT) ? INT32PTR_T : FLOATPTR_T;
+        return builder->create_alloca(ptr_ty);
+    } else {
+        // 标量参数：存放成值
+        Type *val_ty = (node.type == TYPE_INT) ? INT32_T : FLOAT_T;
+        return builder->create_alloca(val_ty);
+    }
 }
 
 Value* CminusfBuilder::visit(ASTCompoundStmt &node) {
