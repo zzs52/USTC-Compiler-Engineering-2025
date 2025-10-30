@@ -58,9 +58,44 @@ Value* CminusfBuilder::visit(ASTNum &node) {
 }
 
 Value* CminusfBuilder::visit(ASTVarDeclaration &node) {
-    // TODO: This function is empty now.
-    // Add some code here.
-    return nullptr;
+    // 判定基本类型
+    Type *elem_ty = (node.type == TYPE_INT) ? INT32_T : FLOAT_T;
+
+    bool is_global = (context.func == nullptr);
+    if (!node.num) {
+        // 标量
+        if (is_global) {
+            // 全局：必须零初始化
+            auto gv = GlobalVariable::create(
+                node.id, module.get(), elem_ty, /*is_const=*/false,
+                ConstantZero::get(elem_ty, module.get()));
+            scope.push(node.id, gv);
+            return gv;
+        } else {
+            // 局部：alloca
+            auto addr = builder->create_alloca(elem_ty);
+            scope.push(node.id, addr);
+            return addr;
+        }
+    } else {
+        // 数组
+        auto num = node.num->i_val; // 语法保证是整型字面量
+        auto arr_ty = ArrayType::get(elem_ty, num);
+
+        if (is_global) {
+            // 全局数组：零初始化
+            auto gv = GlobalVariable::create(
+                node.id, module.get(), arr_ty, /*is_const=*/false,
+                ConstantZero::get(arr_ty, module.get()));
+            scope.push(node.id, gv);
+            return gv;
+        } else {
+            // 局部数组：alloca 数组类型
+            auto addr = builder->create_alloca(arr_ty);
+            scope.push(node.id, addr);
+            return addr;
+        }
+    }
 }
 
 Value* CminusfBuilder::visit(ASTFunDeclaration &node) {
