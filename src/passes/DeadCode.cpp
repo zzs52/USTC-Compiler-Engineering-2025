@@ -80,15 +80,37 @@ bool DeadCode::sweep(Function *func) {
     // 3. 如果删除了指令，返回true，否则返回false
     // 4. 注意：删除指令时，需要先删除操作数的引用，然后再删除指令本身
     // 5. 删除指令时，需要注意指令的顺序，不能删除正在遍历的指令
-    std::unordered_set<Instruction *> wait_del{};
+    bool changed = false;
 
     // 1. 收集所有未被标记的指令
- 
+    for (auto &bb : func->get_basic_blocks()) {
+        std::vector<Instruction *> wait_del;
 
-    // 2. 执行删除
-  
+        for (auto &instr : bb.get_instructions()) {
+            Instruction *ins = &instr;
+            if (marked.find(ins) == marked.end() || !marked[ins]) {
+                wait_del.push_back(ins);
+            }
+        }
+
+        for (auto ins : wait_del) {
+            // 删除指令前，先删除操作数的引用
+            changed = true;
+            auto users = ins->get_use_list();
+            for (auto &use : users) {
+                User *user = use.val_;
+                if (auto user_ins = dynamic_cast<Instruction *>(user)) {
+                    user_ins->remove_operand(use.arg_no_);
+                }
+            }
+            ins->remove_all_operands();
+            bb.remove_instr(ins);
+            ins_count++;
+            delete ins;
+        }
+    }
     
-    return not wait_del.empty(); // changed
+    return changed;
 }
 
 bool DeadCode::is_critical(Instruction *ins) {
