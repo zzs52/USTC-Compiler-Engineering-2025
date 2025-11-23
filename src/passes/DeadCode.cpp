@@ -1,9 +1,11 @@
 #include "DeadCode.hpp"
+#include "BasicBlock.hpp"
 #include "Instruction.hpp"
 #include "logging.hpp"
 #include <memory>
 #include <vector>
-
+#include <unordered_set>
+#include <stdexcept>
 
 // 处理流程：两趟处理，mark 标记有用变量，sweep 删除无用指令
 void DeadCode::run() {
@@ -14,24 +16,30 @@ void DeadCode::run() {
         for (auto &F : m_->get_functions()) {
             auto func = &F;
             changed |= clear_basic_blocks(func);
+            marked.clear();
             mark(func);
             changed |= sweep(func);
         }
+
+        sweep_globally();
     } while (changed);
     LOG_INFO << "dead code pass erased " << ins_count << " instructions";
 }
 
 bool DeadCode::clear_basic_blocks(Function *func) {
-    bool changed = 0;
+    bool changed = false;
     std::vector<BasicBlock *> to_erase;
     for (auto &bb1 : func->get_basic_blocks()) {
         auto bb = &bb1;
         if(bb->get_pre_basic_blocks().empty() && bb != func->get_entry_block()) {
             to_erase.push_back(bb);
-            changed = 1;
+            changed = true;
         }
     }
     for (auto &bb : to_erase) {
+        for (auto succ_bb : bb->get_succ_basic_blocks()) {
+            succ_bb->remove_pre_basic_block(bb);
+        }
         bb->erase_from_parent();
         delete bb;
     }
