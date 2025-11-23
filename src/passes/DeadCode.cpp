@@ -120,7 +120,27 @@ bool DeadCode::is_critical(Instruction *ins) {
     // 2. 如果是无用的分支指令，则无用
     // 3. 如果是无用的返回指令，则无用
     // 4. 如果是无用的存储指令，则无用
-    
+    if (!ins->get_use_list().empty()) {
+        return true;
+    }
+
+    if (ins->is_call()) {
+        auto call_inst = static_cast<CallInst *>(ins);
+        auto callee = call_inst->func_;
+        bool is_pure = false;
+        try {
+            is_pure = func_info->is_pure_function(callee);
+        } catch (const std::out_of_range &) {
+            is_pure = false;
+        }
+        return !is_pure;
+    }
+
+    if (ins->is_br() || ins->is_ret() || ins->is_store()) {
+        return true;
+    }
+
+    return false;
 }
 
 void DeadCode::sweep_globally() {
