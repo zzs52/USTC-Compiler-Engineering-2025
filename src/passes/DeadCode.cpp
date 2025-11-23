@@ -47,8 +47,15 @@ bool DeadCode::clear_basic_blocks(Function *func) {
 }
 
 void DeadCode::mark(Function *func) {
-    // TODO
-    
+    // 遍历函数所有指令，把 "关键" 指令作为起点进行递归标记
+    for (auto &bb : func->get_basic_blocks()) {
+        for (auto &instr : bb.get_instructions()) {
+            Instruction *ins = &instr;
+            if (is_critical(ins)) {
+                mark(ins);
+            }
+        }
+    }
 }
 
 void DeadCode::mark(Instruction *ins) {
