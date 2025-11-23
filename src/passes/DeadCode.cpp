@@ -60,6 +60,16 @@ void DeadCode::mark(Function *func) {
 
 void DeadCode::mark(Instruction *ins) {
     // TODO
+    if (marked.find(ins) != marked.end()) {
+        return;
+    }
+    marked[ins] = true;
+    for (auto operand : ins->get_operands()) {
+        if (!operand) continue;
+        if (auto def_ins = dynamic_cast<Instruction *>(operand)) {
+            mark(def_ins);
+        }
+    }
 }
 
 bool DeadCode::sweep(Function *func) {
